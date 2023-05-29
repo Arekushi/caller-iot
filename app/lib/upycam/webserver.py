@@ -46,8 +46,7 @@ class webcam():
 
         # Camera resilience - if we fail to init try to deinit and init again
         if app_config['camera'] == 'ESP32-CAM':
-            camera.init(0, format=camera.JPEG,
-                        framesize=self.framesize)  # ESP32-CAM
+            camera.init(0, format=camera.JPEG, framesize=self.framesize)  # ESP32-CAM
 
         elif app_config['camera'] == 'M5CAMERA':
             camera.init(0, format=camera.JPEG, framesize=self.framesize, d0=32, d1=35, d2=34, d3=5, d4=39,
@@ -60,8 +59,10 @@ class webcam():
     def _httpStream(self, httpClient, httpResponse, routeArgs):
         image = camera.capture()
 
-        headers = {'Last-Modified': 'Fri, 1 Jan 2018 23:42:00 GMT',
-                   'Cache-Control': 'no-cache, no-store, must-revalidate'}
+        headers = {
+            'Last-Modified': 'Fri, 1 Jan 2018 23:42:00 GMT',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
 
         httpResponse.WriteResponse(code=200, headers=headers,
                                    contentType="image/jpeg",
