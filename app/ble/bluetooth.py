@@ -1,5 +1,3 @@
-# This example demonstrates a UART periperhal.
-
 import bluetooth
 import random
 import struct
@@ -8,6 +6,7 @@ from app.ble.ble_advertising import advertising_payload
 from app.secrets import bluetooth_config
 
 from micropython import const
+from app.http.httpclient import HttpClient
 
 _IRQ_CENTRAL_CONNECT = const(1)
 _IRQ_CENTRAL_DISCONNECT = const(2)
@@ -33,7 +32,6 @@ class BLESimplePeripheral:
         self._connections = set()
         self._write_callback = None
         self._payload = advertising_payload(name=name, services=[_UART_UUID])
-        self._advertise()
 
     def _irq(self, event, data):
         # Track connections so we can send notifications.
@@ -47,7 +45,7 @@ class BLESimplePeripheral:
             self._connections.remove(conn_handle)
 
             # Start advertising again to allow a new connection.
-            self._advertise()
+            self.advertise()
         elif event == _IRQ_GATTS_WRITE:
             conn_handle, value_handle = data
             value = self._ble.gatts_read(value_handle)
@@ -61,9 +59,21 @@ class BLESimplePeripheral:
     def is_connected(self):
         return len(self._connections) > 0
 
-    def _advertise(self, interval_us=500000):
+    def advertise(self, interval_us=500000):
         print("Starting advertising")
         self._ble.gap_advertise(interval_us, adv_data=self._payload)
+
+    def stop_advertise(self):
+        self._ble.gap_advertise(None)
+
+    def disconect_all(self):
+        for conn_handle in self._connections.copy():
+            self._ble.gap_disconnect(conn_handle)
+        self._connections.clear()
+
+    def disable(self):
+        self.stop_advertise()
+        self.disconect_all()
 
     def on_write(self, callback):
         self._write_callback = callback
@@ -91,4 +101,7 @@ def demo():
 
 
 if __name__ == "__main__":
-    demo()
+    http = HttpClient()
+    response = http.get('https://caller-iot-api.onrender.com/hello')
+    print(response.json())
+    # demo()

@@ -1,2 +1,6 @@
+from app.register import Register
+
+
 def run():
-    print('Hello World!')
+    register = Register()
+    register.checkup()
